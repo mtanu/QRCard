@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Reference screenshots of the original app: they contain personal contact
+# details, so they stay local and out of this public repository.
+docs/reference/

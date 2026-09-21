@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR Card tests</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  body { padding: 20px; }
+  .result { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .tag { flex: 0 0 auto; font-weight: 700; }
+  .pass .tag { color: #22c55e; }
+  .fail .tag { color: var(--danger); }
+  .detail { display: block; color: var(--text-dim); font-family: ui-monospace, Menlo, Consolas, monospace; }
+  #summary { font-size: 18px; font-weight: 700; margin: 16px 0; }
+  #render { margin-top: 24px; }
+</style>
+</head>
+<body>
+<h1>QR Card tests</h1>
+<p class="hint">Runs the same cases as <code>node tests/run.mjs</code>, plus a live render that only a browser can do.</p>
+<div id="summary">Running…</div>
+<div id="results"></div>
+
+<div id="render">
+  <h2>Live render</h2>
+  <div class="previewwrap" id="live"></div>
+  <p class="hint" id="live-note"></p>
+</div>
+
+<script src="../vendor/qr-code-styling.js"></script>
+<script type="module">
+import { runCases } from './cases.js';
+import { renderInto } from '../js/qr.js';
+import { blankCard } from '../js/store.js';
+
+const results = runCases();
+const failed = results.filter((r) => !r.ok);
+
+const list = document.getElementById('results');
+for (const r of results) {
+  const row = document.createElement('div');
+  row.className = `result ${r.ok ? 'pass' : 'fail'}`;
+  row.innerHTML = `<span class="tag">${r.ok ? 'PASS' : 'FAIL'}</span><span>${r.name}</span>`;
+  if (!r.ok) {
+    const detail = document.createElement('span');
+    detail.className = 'detail';
+    detail.textContent = r.detail;
+    row.append(detail);
+  }
+  list.append(row);
+}
+
+const summary = document.getElementById('summary');
+summary.textContent = `${results.length - failed.length}/${results.length} passed`;
+summary.style.color = failed.length ? 'var(--danger)' : '#22c55e';
+
+// The library only runs in a browser, so prove here that it actually draws something.
+const note = document.getElementById('live-note');
+try {
+  const card = blankCard({
+    firstName: 'Ada', lastName: 'Lovelace', jobTitle: 'Engineer', company: 'Analytical Engines',
+    dotStyle: 'rounded', eyeFrameStyle: 'extra-rounded', eyeDotStyle: 'dot', qrColor: '#1D4ED8',
+  });
+  card.phones = [{ id: 'p', type: 'mobile', value: '+1 555 010 0100' }];
+  renderInto(document.getElementById('live'), card, { size: 260 });
+  note.textContent = 'Rendered a styled QR. Scan it — it should offer to add Ada Lovelace as a contact.';
+} catch (err) {
+  note.textContent = `Render failed: ${err.message}`;
+  note.style.color = 'var(--danger)';
+}
+</script>
+</body>
+</html>
