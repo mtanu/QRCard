@@ -26,7 +26,10 @@ function exportSection() {
 }
 
 function backupSection(rerender) {
-  const fileInput = el('input', { type: 'file', accept: 'application/json,.json', style: 'display:none' });
+  // Same reasoning as the logo picker: no accept filter, because a .json file in
+  // Downloads or Drive can be unreachable behind one on mobile. The contents are
+  // validated in importJson either way.
+  const fileInput = el('input', { type: 'file', id: 'import-json', class: 'sr-only' });
 
   fileInput.addEventListener('change', async () => {
     const file = fileInput.files && fileInput.files[0];
@@ -59,7 +62,7 @@ function backupSection(rerender) {
           toast('Backup saved.');
         },
       }),
-      el('button', { class: 'btn', type: 'button', text: 'Import cards (.json)', onclick: () => fileInput.click() }),
+      el('label', { class: 'btn', for: 'import-json', text: 'Import cards (.json)' }),
     ]),
     el('p', {
       class: 'hint',

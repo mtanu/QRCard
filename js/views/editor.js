@@ -240,7 +240,11 @@ function logoSection(card, onChange) {
     }
   };
 
-  const input = el('input', { type: 'file', accept: 'image/*', style: 'display:none' });
+  // No accept filter: on Android, accept="image/*" can hand you a photo-gallery-only
+  // picker with no route to Files, Downloads or Drive — where a logo usually lives.
+  // Anything that is not a decodable image is rejected below with a readable message.
+  const inputId = `logo-${card.id}`;
+  const input = el('input', { type: 'file', id: inputId, class: 'sr-only' });
   input.addEventListener('change', async () => {
     const file = input.files && input.files[0];
     input.value = '';
@@ -270,8 +274,10 @@ function logoSection(card, onChange) {
     el('h3', { text: 'Logo' }),
     preview,
     el('div', { style: 'margin-top:12px' }, [
-      el('button', { class: 'btn btn--sm', type: 'button', text: 'Choose image', onclick: () => input.click() }),
+      // A label rather than a scripted input.click(): no JS, works everywhere.
+      el('label', { class: 'btn btn--sm', for: inputId, text: 'Choose image' }),
     ]),
+    el('p', { class: 'hint', text: 'PNG, JPG, WebP or SVG. It is shrunk to 512px before being stored.' }),
     el('div', { class: 'field', style: 'margin-top:12px' }, [el('label', { text: 'Logo size' }), sizeInput]),
     warn,
     input,
