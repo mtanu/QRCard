@@ -4,7 +4,7 @@ import * as display from './views/display.js';
 import * as editor from './views/editor.js';
 import * as cards from './views/cards.js';
 import * as settings from './views/settings.js';
-import { initPresent, closePresent } from './views/present.js';
+import { initPresent, closePresent, isPresenting } from './views/present.js';
 import { applyTheme, watchSystemTheme } from './theme.js';
 import { toast } from './ui.js';
 
@@ -47,6 +47,10 @@ window.addEventListener('hashchange', renderRoute);
 let resizeTimer = null;
 window.addEventListener('resize', () => {
   if (parseRoute().name !== 'display') return;
+  // Entering full screen resizes the viewport. Re-rendering the route here would call
+  // closePresent() and tear down the overlay a moment after it opened; present mode
+  // resizes its own QR, so leave it alone while it is up.
+  if (isPresenting()) return;
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(renderRoute, 250);
 });

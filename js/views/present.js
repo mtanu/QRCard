@@ -38,6 +38,11 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && !wakeLock) acquireWakeLock();
 });
 
+export function isPresenting() {
+  const overlay = document.getElementById('present');
+  return Boolean(overlay) && !overlay.hidden;
+}
+
 export function openPresent(target) {
   card = target;
   mono = false;
