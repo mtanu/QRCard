@@ -185,7 +185,7 @@ function colorField(label, value, onChange) {
  * Style pickers are a row of little rendered QRs rather than a dropdown — the choice is
  * visual, so it should be made visually.
  */
-function stylePicker({ title, options, current, card, key, onChange }) {
+function stylePicker({ title, options, current, card, key, onChange, note }) {
   const grid = el('div', { class: 'stylegrid' });
   const buttons = [];
 
@@ -212,7 +212,11 @@ function stylePicker({ title, options, current, card, key, onChange }) {
     grid.append(button);
   });
 
-  return el('div', { class: 'section' }, [el('h3', { text: title }), grid]);
+  return el('div', { class: 'section' }, [
+    el('h3', { text: title }),
+    grid,
+    note ? el('p', { class: 'hint', text: note }) : null,
+  ]);
 }
 
 function logoSection(card, onChange) {
@@ -361,7 +365,10 @@ export function render(root, { navigate, params }) {
   ]);
 
   body.append(
-    stylePicker({ title: 'QR pattern', options: DOT_STYLES, current: card.dotStyle, card, key: 'dotStyle', onChange }),
+    stylePicker({
+      title: 'QR pattern', options: DOT_STYLES, current: card.dotStyle, card, key: 'dotStyle', onChange,
+      note: 'Square is the most reliable. Decorative patterns scan fine on phone cameras, but some lightweight scanner apps find Dots harder to read.',
+    }),
     stylePicker({ title: 'Corner frames', options: EYE_FRAME_STYLES, current: card.eyeFrameStyle, card, key: 'eyeFrameStyle', onChange }),
     stylePicker({ title: 'Corner dots', options: EYE_DOT_STYLES, current: card.eyeDotStyle, card, key: 'eyeDotStyle', onChange }),
 

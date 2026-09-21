@@ -96,5 +96,9 @@ colours or the logo: render it and scan it with a real phone.
 - Uploaded logos are downscaled to a 512px edge before being stored, to stay inside the
   ~5MB `localStorage` budget.
 - The editor warns when the QR and background colours fall below a 3:1 contrast ratio.
+- All six module patterns were decoded back to a byte-identical vCard with ZXing (the
+  decoder behind most phone scanner apps) across a range of sizes. The lighter-weight
+  jsQR decoder occasionally misses the **Dots** pattern, so that one carries a note in
+  the editor: it is the most decorative and the least robust.
 - Long vCard lines are deliberately not folded at 75 octets: folding is spec-correct but
   adds bytes to an already dense QR, and scanners accept unfolded input.
