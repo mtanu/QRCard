@@ -111,6 +111,16 @@ const TESTS = [
     if (fn !== 'FN:Example Co') throw new Error(fn);
   }],
 
+  ['puts a middle name or initial in the additional-names slot of N', () => {
+    const card = sample();
+    card.middleName = 'Q.';
+    const l = lines(card);
+    // N is Family;Given;Additional;Prefixes;Suffixes — the middle name is the third part.
+    if (l.find((x) => x.startsWith('N:')) !== 'N:Lovelace;Ada;Q.;;') throw new Error(l.find((x) => x.startsWith('N:')));
+    if (l.find((x) => x.startsWith('FN:')) !== 'FN:Ada Q. Lovelace') throw new Error(l.find((x) => x.startsWith('FN:')));
+    if (displayName(card) !== 'Ada Q. Lovelace') throw new Error(displayName(card));
+  }],
+
   ['makes a safe filename', () => {
     if (filename(sample()) !== 'ada-lovelace.vcf') throw new Error(filename(sample()));
   }],

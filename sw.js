@@ -1,6 +1,6 @@
 // Cache-first app shell. Bump CACHE_VERSION on every deploy that changes a shipped file,
 // otherwise returning visitors keep the old one until they clear site data.
-const CACHE_VERSION = 'qrcard-v2';
+const CACHE_VERSION = 'qrcard-v3';
 
 const SHELL = [
   './',

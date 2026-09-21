@@ -323,6 +323,7 @@ export function render(root, { navigate, params }) {
         textField('First name', card.firstName, (v) => { card.firstName = v; onChange(); }, { autocapitalize: 'words' }),
         textField('Last name', card.lastName, (v) => { card.lastName = v; onChange(); }, { autocapitalize: 'words' }),
       ]),
+      textField('Middle name', card.middleName, (v) => { card.middleName = v; onChange(); }, { autocapitalize: 'words', placeholder: 'Or just an initial' }),
       el('div', { class: 'grid2' }, [
         textField('Prefix', card.prefix, (v) => { card.prefix = v; onChange(); }, { placeholder: 'Dr' }),
         textField('Suffix', card.suffix, (v) => { card.suffix = v; onChange(); }, { placeholder: 'PhD' }),
