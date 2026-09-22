@@ -46,9 +46,10 @@ free with Pages.
 
 Any other static host works the same way: upload the folder as-is.
 
-**After changing a shipped file, bump `CACHE_VERSION` in `sw.js`.** The service worker
-serves the app shell cache-first, so returning visitors keep the old version until that
-string changes.
+**After changing a shipped file, bump `APP_VERSION` in `js/version.js`.** The service
+worker serves the app shell cache-first and names its cache `qrcard-v<APP_VERSION>`, so
+returning visitors keep the old version until that number changes. The same number is
+shown under Settings → About.
 
 ## Layout
 
@@ -56,6 +57,7 @@ string changes.
 index.html                  app shell, icon sprite
 css/app.css                 design tokens, light and dark
 js/app.js                   hash router and bootstrap
+js/version.js               APP_VERSION: shown in About, names the SW cache
 js/store.js                 the only module that touches localStorage
 js/vcard.js                 vCard 3.0 serialiser
 js/qr.js                    wrapper around qr-code-styling

@@ -6,6 +6,7 @@ import {
 import { el, setAppBar, toast, downloadBlob, select } from '../ui.js';
 import { downloadQr, downloadVcf, shareQrImage } from '../share.js';
 import { applyTheme } from '../theme.js';
+import '../version.js';
 
 function exportSection() {
   const card = getCard(getActiveId());
@@ -90,6 +91,7 @@ export function render(root, { navigate }) {
         el('h3', { text: 'About' }),
         el('p', { class: 'hint', text: 'QR Card encodes your details as a vCard. Anyone who scans it gets an Add Contact prompt — no app, no account, no network needed.' }),
         el('p', { class: 'hint', text: 'Everything runs in your browser and nothing leaves this device.' }),
+        el('p', { class: 'hint', text: `Version ${self.APP_VERSION}` }),
       ]),
     ]));
   };

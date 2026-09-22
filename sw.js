@@ -1,6 +1,7 @@
-// Cache-first app shell. Bump CACHE_VERSION on every deploy that changes a shipped file,
-// otherwise returning visitors keep the old one until they clear site data.
-const CACHE_VERSION = 'qrcard-v5';
+// Cache-first app shell. Bump APP_VERSION in js/version.js on every deploy that changes a
+// shipped file, otherwise returning visitors keep the old one until they clear site data.
+importScripts('./js/version.js');
+const CACHE_VERSION = `qrcard-v${self.APP_VERSION}`;
 
 const SHELL = [
   './',
@@ -8,6 +9,7 @@ const SHELL = [
   './manifest.webmanifest',
   './css/app.css',
   './js/app.js',
+  './js/version.js',
   './js/ui.js',
   './js/store.js',
   './js/vcard.js',
