@@ -8,9 +8,11 @@ let card = null;
 let mono = false;
 let wakeLock = null;
 
+// Width only has to clear the overlay padding; height also has to leave room for the
+// name and buttons underneath.
 function size() {
-  const side = Math.min(window.innerWidth, window.innerHeight);
-  return Math.max(220, Math.round(side - 120));
+  const side = Math.min(window.innerWidth - 64, window.innerHeight - 150);
+  return Math.max(220, Math.round(side));
 }
 
 // Keeps the screen awake while the QR is up. Chrome on Android supports this; Safari

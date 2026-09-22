@@ -240,11 +240,11 @@ function logoSection(card, onChange) {
     }
   };
 
-  // No accept filter: on Android, accept="image/*" can hand you a photo-gallery-only
-  // picker with no route to Files, Downloads or Drive — where a logo usually lives.
-  // Anything that is not a decodable image is rejected below with a readable message.
+  // accept="image/*" limits the picker to images. On Android that means the system photo
+  // picker; files outside the gallery are reached from its menu. The filter is only a
+  // hint, so anything that is not a decodable image is still rejected below.
   const inputId = `logo-${card.id}`;
-  const input = el('input', { type: 'file', id: inputId, class: 'sr-only' });
+  const input = el('input', { type: 'file', accept: 'image/*', id: inputId, class: 'sr-only' });
   input.addEventListener('change', async () => {
     const file = input.files && input.files[0];
     input.value = '';

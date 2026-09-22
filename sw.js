@@ -1,6 +1,6 @@
 // Cache-first app shell. Bump CACHE_VERSION on every deploy that changes a shipped file,
 // otherwise returning visitors keep the old one until they clear site data.
-const CACHE_VERSION = 'qrcard-v4';
+const CACHE_VERSION = 'qrcard-v5';
 
 const SHELL = [
   './',
@@ -30,8 +30,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_VERSION)
       // addAll is all-or-nothing, so one missing file would leave the app with no cache
-      // at all. Cache each file on its own and let a stray 404 pass.
-      .then((cache) => Promise.all(SHELL.map((url) => cache.add(url).catch(() => null))))
+      // at all. Cache each file on its own and let a stray 404 pass. cache: 'reload' skips
+      // the HTTP cache — Pages serves max-age=600, so without it a new version can be
+      // filled with the previous deploy's files and keep them until the next bump.
+      .then((cache) => Promise.all(SHELL.map((url) =>
+        cache.add(new Request(url, { cache: 'reload' })).catch(() => null))))
       .then(() => self.skipWaiting()),
   );
 });
