@@ -12,6 +12,7 @@ const SHELL = [
   './js/version.js',
   './js/ui.js',
   './js/store.js',
+  './js/links.js',
   './js/vcard.js',
   './js/qr.js',
   './js/share.js',

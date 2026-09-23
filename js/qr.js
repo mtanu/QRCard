@@ -69,6 +69,31 @@ export function contrastWarning(card) {
   return `These colours are only ${ratio.toFixed(1)}:1 apart. Phones will struggle to scan this — darken the QR colour or lighten the background.`;
 }
 
+// Version 40, Byte mode, error correction H. Level H is pinned in optionsFor(), so this
+// is a hard ceiling — past it the vendored library throws "code length overflow."
+export const MAX_PAYLOAD_BYTES = 1273;
+const WARN_AT = 0.9;
+
+export function payloadBytes(card) {
+  return new TextEncoder().encode(build(card)).length;
+}
+
+export function payloadWarning(card) {
+  const bytes = payloadBytes(card);
+  if (bytes > MAX_PAYLOAD_BYTES) {
+    return `This card holds ${bytes} bytes, more than the ${MAX_PAYLOAD_BYTES} a QR code can carry. Shorten a link or the note, or remove a field.`;
+  }
+  if (bytes >= MAX_PAYLOAD_BYTES * WARN_AT) {
+    return `This card is using ${bytes} of ${MAX_PAYLOAD_BYTES} bytes. The QR is getting dense — it will still scan, but leave room before adding more.`;
+  }
+  return null;
+}
+
+/** What to show when a render throws: name the real cause when it is size. */
+export function qrErrorMessage(err, card) {
+  return payloadBytes(card) > MAX_PAYLOAD_BYTES ? payloadWarning(card) : err.message;
+}
+
 export const MAX_LOGO_SCALE = 0.22;
 
 /**

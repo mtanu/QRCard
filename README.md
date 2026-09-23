@@ -97,7 +97,49 @@ colours or the logo: render it and scan it with a real phone.
   embedded in the contact, because a photo would multiply the payload size.
 - Uploaded logos are downscaled to a 512px edge before being stored, to stay inside the
   ~5MB `localStorage` budget.
-- The editor warns when the QR and background colours fall below a 3:1 contrast ratio.
+- The editor warns when the QR and background colours fall below a 3:1 contrast ratio,
+  and again as the payload approaches the 1273-byte ceiling a level-H Byte-mode code has
+  at version 40. Past that ceiling the QR cannot be drawn at all, so the warning says so
+  in plain words instead of leaking the library's `code length overflow.`
+- Every link goes out as a bare `URL:` line, with no label of any kind. Six encodings of
+  the same two links were scanned into a Galaxy S24 Ultra through both Google Contacts and
+  Samsung Contacts:
+
+  | Encoding | Links imported |
+  | --- | --- |
+  | `URL:` alone | yes |
+  | `itemN.URL` + `itemN.X-ABLabel` | **no — both lost** |
+  | `URL:` then an ungrouped `X-ABLabel:` | yes |
+  | bare `URL:` plus the grouped pair | yes |
+  | `URL;TYPE=LinkedIn:` | yes |
+  | `X-SOCIALPROFILE;TYPE=linkedin:` | **no — both lost** |
+
+  Anything named exactly `URL` survives. The `itemN.` group prefix is what binds a label
+  to a URL for Apple, but it also makes the property name unrecognisable to Android's
+  parser, so the decoration meant to describe the link is what loses it — the labelling
+  scheme defeated the robustness it existed to provide. `X-SOCIALPROFILE` fails the same
+  way, for the same reason.
+
+  The decisive point is not parsing, though: **neither Android contacts app has a label
+  field for a link**, so no encoding can render one there. Labels are achievable only on
+  Apple, would cost QR capacity on every card, and are largely redundant anyway, since
+  `linkedin.com/in/…` and `wa.me/…` announce what they are. The service name still shows
+  on this app's own card screen, where it costs nothing.
+
+  A link row is therefore one of the named services or a plain **Website**. There is no
+  custom-label option: it existed only to name a link in the exported contact, and once
+  that stopped being possible it was a text box whose output went nowhere. A stored row
+  using the retired `other` type is migrated to `website` on load.
+- For the known services the editor accepts either a full URL or just the identifier,
+  expanding a handle against a per-service template (`https://youtube.com/@<handle>` and
+  so on) when the field loses focus. Expanding in the field rather than silently on
+  export lets you check the result, and keeps one stored value that the vCard, the card
+  display and the export all read.
+- WhatsApp takes either form: `wa.me` serves both a username and an international phone
+  number as bare digits, and what tells them apart is WhatsApp's own rule that a username
+  must contain at least one letter. A number is therefore never carried over when you
+  change the service dropdown — `instagram.com/15550100100` would be nonsense — while a
+  username is treated as a handle like any other.
 - All six module patterns were decoded back to a byte-identical vCard with ZXing (the
   decoder behind most phone scanner apps) across a range of sizes. The lighter-weight
   jsQR decoder occasionally misses the **Dots** pattern, so that one carries a note in

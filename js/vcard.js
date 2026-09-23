@@ -1,6 +1,8 @@
 // vCard 3.0 serialiser. The output of build() is exactly what the QR encodes, so anything
 // added here costs QR density — keep it to what phones actually import.
 
+import { normalizeUrl } from './links.js';
+
 const TEL_PARAMS = {
   mobile: 'CELL,VOICE',
   home: 'HOME,VOICE',
@@ -46,12 +48,6 @@ export function telValue(value) {
   return String(value || '').replace(/[^\d+*#,]/g, '');
 }
 
-function normalizeUrl(value) {
-  const v = value.trim();
-  if (!v) return '';
-  return /^[a-z][a-z0-9+.-]*:/i.test(v) ? v : `https://${v}`;
-}
-
 /**
  * Build a vCard 3.0 string for a card. Empty fields are omitted entirely rather than
  * emitted blank, and lines are deliberately NOT folded at 75 octets: folding is
@@ -83,8 +79,18 @@ export function build(card) {
     lines.push(`EMAIL;TYPE=${EMAIL_PARAMS[e.type] || EMAIL_PARAMS.other}:${escapeValue(v)}`);
   }
 
-  // Every URL goes out as a plain URL line, including the social ones: typed social
-  // properties are Apple-specific and a lot of Android scanners drop them on the floor.
+  // Every link goes out as a bare URL line, with no label of any kind. This was tested on
+  // a Galaxy S24 Ultra, through Google Contacts and Samsung Contacts, against six
+  // encodings of the same links: anything whose property name is exactly URL imported,
+  // while both `itemN.URL` + `itemN.X-ABLabel` and `X-SOCIALPROFILE` were dropped
+  // outright — link and all. The group prefix is what binds a label to a URL for Apple,
+  // but it also makes the property name unrecognisable to Android's parser, so the very
+  // decoration meant to describe the link is what loses it.
+  //
+  // Labels were not worth another attempt regardless: neither Android contacts app has a
+  // label field for a link, so nothing can render one there, and the label is mostly
+  // redundant anyway — linkedin.com/in/… and wa.me/… say what they are. The service name
+  // still shows on this app's own card screen, which is where it costs no QR capacity.
   for (const u of card.urls || []) {
     const v = normalizeUrl(u.value || '');
     if (v) lines.push(`URL:${escapeValue(v)}`);

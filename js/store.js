@@ -9,10 +9,10 @@ export const PHONE_TYPES = [
 export const EMAIL_TYPES = [
   ['work', 'Work'], ['home', 'Home'], ['other', 'Other'],
 ];
-export const URL_TYPES = [
-  ['website', 'Website'], ['linkedin', 'LinkedIn'], ['x', 'X'],
-  ['github', 'GitHub'], ['instagram', 'Instagram'], ['other', 'Other'],
-];
+// Lives in links.js, next to the URL templates and the service names it feeds.
+import { URL_TYPES } from './links.js';
+
+export { URL_TYPES };
 export const ADDRESS_TYPES = [
   ['work', 'Work'], ['home', 'Home'],
 ];
@@ -67,6 +67,14 @@ function normalizeCard(raw) {
     card[key] = Array.isArray(card[key]) ? card[key] : [];
     card[key] = card[key].map((row) => ({ id: uid('r'), ...row }));
   }
+  // A link row whose service is no longer offered — such as the old custom-label 'other'
+  // — becomes a plain website, so its dropdown still has a matching option to show. The
+  // label it carried is dropped with it: labels were only ever shown in this app, never
+  // exported, so there is nothing left to keep them for.
+  const linkTypes = new Set(URL_TYPES.map((p) => p[0]));
+  card.urls = card.urls.map(({ label, ...row }) => (
+    linkTypes.has(row.type) ? row : { ...row, type: 'website' }
+  ));
   card.logoScale = Number.isFinite(card.logoScale) ? card.logoScale : 0.2;
   return card;
 }

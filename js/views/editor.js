@@ -5,12 +5,20 @@ import {
   PHONE_TYPES, EMAIL_TYPES, URL_TYPES, ADDRESS_TYPES,
 } from '../store.js';
 import {
-  renderInto, update, normalizeHex, isHex, contrastWarning,
+  renderInto, update, normalizeHex, isHex, contrastWarning, payloadWarning, qrErrorMessage,
   DOT_STYLES, EYE_FRAME_STYLES, EYE_DOT_STYLES, MAX_LOGO_SCALE,
 } from '../qr.js';
+import { expandLink, handleOf } from '../links.js';
 import { el, select, setAppBar, toast, debounce } from '../ui.js';
 
 const MAX_LOGO_EDGE = 512;
+
+// Fictional examples, in the shape each service's identifier actually takes.
+const LINK_HINTS = {
+  website: 'example.com', linkedin: 'ada-lovelace', x: 'adalovelace',
+  instagram: 'ada.lovelace', facebook: 'ada.lovelace', youtube: 'adalovelace',
+  tiktok: 'adalovelace', github: 'adalovelace', whatsapp: 'adalovelace',
+};
 
 /**
  * Shrink an uploaded logo before it is stored. Card data lives in localStorage, which is
@@ -65,24 +73,47 @@ function textField(label, value, onInput, opts = {}) {
 }
 
 /**
- * A repeatable section (phones, emails, websites): a type dropdown, a value, a remove
- * button, and an add button underneath.
+ * A repeatable section (phones, emails, links): a type dropdown, a value, a remove button,
+ * and an add button underneath.
+ *
+ * `placeholder` may be a string or a function of the row, so the hint can follow the
+ * selected type. `normalize` rewrites the row's value when the field loses focus — links
+ * use it to expand a bare handle into a full URL where the user can see the result.
  */
-function repeatSection({ title, rows, types, placeholder, inputType, addLabel, onChange }) {
+function repeatSection({
+  title, rows, types, placeholder, inputType, addLabel, onChange,
+  normalize, onTypeChange, hint,
+}) {
   const list = el('div', { class: 'repeat' });
 
   const drawRow = (row) => {
     const input = el('input', {
       type: inputType || 'text',
       value: row.value || '',
-      placeholder,
       autocapitalize: 'none',
       autocomplete: 'off',
     });
     input.addEventListener('input', () => { row.value = input.value; onChange(); });
 
+    const syncRow = () => {
+      input.value = row.value || '';
+      input.placeholder = typeof placeholder === 'function' ? placeholder(row) : (placeholder || '');
+    };
+
+    // 'change' rather than 'blur': it only fires when the value actually changed, so
+    // tabbing through a field they never touched leaves it exactly as they left it.
+    if (normalize) {
+      input.addEventListener('change', () => { normalize(row); syncRow(); onChange(); });
+    }
+
     const node = el('div', { class: 'repeat__row' }, [
-      select('type', types, row.type, (value) => { row.type = value; onChange(); }),
+      select('type', types, row.type, (value) => {
+        const previous = row.type;
+        row.type = value;
+        if (onTypeChange) onTypeChange(row, previous);
+        syncRow();
+        onChange();
+      }),
       input,
       el('button', {
         class: 'iconbtn', type: 'button', 'aria-label': `Remove ${title}`, text: '×',
@@ -94,6 +125,7 @@ function repeatSection({ title, rows, types, placeholder, inputType, addLabel, o
         },
       }),
     ]);
+    syncRow();
     return node;
   };
 
@@ -109,7 +141,12 @@ function repeatSection({ title, rows, types, placeholder, inputType, addLabel, o
     },
   });
 
-  return el('div', { class: 'section' }, [el('h3', { text: title }), list, el('div', { style: 'margin-top:10px' }, [add])]);
+  return el('div', { class: 'section' }, [
+    el('h3', { text: title }),
+    list,
+    el('div', { style: 'margin-top:10px' }, [add]),
+    ...(hint ? [el('p', { class: 'hint', text: hint })] : []),
+  ]);
 }
 
 function addressSection(card, onChange) {
@@ -296,7 +333,7 @@ export function render(root, { navigate, params }) {
   const card = structuredClone(source);
 
   const previewHost = el('div');
-  const warnNode = el('p', { class: 'warn', hidden: true });
+  const warnNode = el('div');
   let preview = null;
 
   const refresh = debounce(() => {
@@ -304,11 +341,10 @@ export function render(root, { navigate, params }) {
       if (preview) update(preview, card, { size: 220 });
       else preview = renderInto(previewHost, card, { size: 220 });
     } catch (err) {
-      previewHost.replaceChildren(el('p', { class: 'empty', text: err.message }));
+      previewHost.replaceChildren(el('p', { class: 'empty', text: qrErrorMessage(err, card) }));
     }
-    const message = contrastWarning(card);
-    warnNode.textContent = message || '';
-    warnNode.hidden = !message;
+    const messages = [contrastWarning(card), payloadWarning(card)].filter(Boolean);
+    warnNode.replaceChildren(...messages.map((m) => el('p', { class: 'warn', text: m })));
   }, 150);
 
   const onChange = () => refresh();
@@ -354,8 +390,17 @@ export function render(root, { navigate, params }) {
     }),
 
     repeatSection({
-      title: 'Website', rows: card.urls, types: URL_TYPES, inputType: 'url',
-      placeholder: 'company.com', addLabel: '+ Add website', onChange,
+      title: 'Links', rows: card.urls, types: URL_TYPES, inputType: 'url',
+      placeholder: (row) => LINK_HINTS[row.type] || 'example.com',
+      addLabel: '+ Add link',
+      hint: 'Paste a full link, or just your username and we’ll fill in the rest when you move on. A WhatsApp phone number needs its country code.',
+      normalize: (row) => { row.value = expandLink(row.type, row.value) || row.value; },
+      onTypeChange: (row, previousType) => {
+        // Only re-template a value this app generated itself; a pasted URL stays put.
+        const handle = handleOf(previousType, row.value);
+        if (handle) row.value = expandLink(row.type, handle) || row.value;
+      },
+      onChange,
     }),
 
     addressSection(card, onChange),
@@ -415,6 +460,8 @@ export function render(root, { navigate, params }) {
         card.qrColor = normalizeHex(card.qrColor, '#000000');
         card.qrBackground = normalizeHex(card.qrBackground, '#FFFFFF');
         card.accentColor = normalizeHex(card.accentColor, '#3B82F6');
+        // Belt and braces: a field saved without ever losing focus still stores a full URL.
+        for (const u of card.urls) u.value = expandLink(u.type, u.value) || u.value;
         const res = saveCard(card);
         if (!res.ok) { toast(res.message); return; }
         toast('Saved.');

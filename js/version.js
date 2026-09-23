@@ -3,4 +3,4 @@
 //
 // A plain script rather than an ES module so the service worker can load it with
 // importScripts(); the page imports it for the side effect and reads self.APP_VERSION.
-self.APP_VERSION = 6;
+self.APP_VERSION = 9;

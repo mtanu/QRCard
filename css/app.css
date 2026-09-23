@@ -251,7 +251,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 }
 
 .repeat { display: flex; flex-direction: column; gap: 10px; }
-.repeat__row { display: grid; grid-template-columns: 116px 1fr 40px; gap: 8px; align-items: start; }
+/* The type column fits the longest service name ("Instagram") without clipping it. */
+.repeat__row { display: grid; grid-template-columns: 128px 1fr 40px; gap: 8px; align-items: start; }
 .repeat__row select { min-width: 0; }
 .adr { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px dashed var(--border); border-radius: var(--radius-sm); }
 .adr__head { display: grid; grid-template-columns: 1fr 40px; gap: 8px; }

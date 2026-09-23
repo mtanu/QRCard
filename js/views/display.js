@@ -2,10 +2,11 @@
 
 import {
   listCards, getActiveId, setActive,
-  PHONE_TYPES, EMAIL_TYPES, URL_TYPES, ADDRESS_TYPES, labelOf,
+  PHONE_TYPES, EMAIL_TYPES, ADDRESS_TYPES, labelOf,
 } from '../store.js';
 import { displayName } from '../vcard.js';
-import { renderInto } from '../qr.js';
+import { normalizeUrl, urlLabel } from '../links.js';
+import { renderInto, qrErrorMessage } from '../qr.js';
 import { el, icon, setAppBar, toast } from '../ui.js';
 import { shareContact } from '../share.js';
 import { openPresent } from './present.js';
@@ -25,12 +26,6 @@ function pill({ iconName, label, value, sub, href }) {
 function telHref(value) {
   const dial = String(value).replace(/[^\d+*#,]/g, '');
   return dial ? `tel:${dial}` : null;
-}
-
-function webHref(value) {
-  const v = String(value).trim();
-  if (!v) return null;
-  return /^[a-z][a-z0-9+.-]*:/i.test(v) ? v : `https://${v}`;
 }
 
 function fieldsFor(card) {
@@ -67,12 +62,13 @@ function fieldsFor(card) {
   }
 
   for (const u of card.urls || []) {
-    if (!(u.value || '').trim()) continue;
+    const href = normalizeUrl(u.value || '');
+    if (!href) continue;
     rows.push(pill({
       iconName: 'link',
-      label: u.type === 'website' ? '' : labelOf(URL_TYPES, u.type),
+      label: urlLabel(u),
       value: u.value.trim().replace(/^https?:\/\//i, ''),
-      href: webHref(u.value),
+      href,
     }));
   }
 
@@ -128,7 +124,7 @@ export function render(root, { navigate }) {
     try {
       renderInto(qrHost, card, { size });
     } catch (err) {
-      qrHost.append(el('p', { class: 'empty', text: err.message }));
+      qrHost.append(el('p', { class: 'empty', text: qrErrorMessage(err, card) }));
     }
 
     deck.append(el('div', { class: 'panel', 'data-card': card.id }, [
