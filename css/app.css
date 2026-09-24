@@ -47,7 +47,12 @@
 
 * { box-sizing: border-box; }
 
-html, body { margin: 0; padding: 0; height: 100%; overflow-x: hidden; }
+/* Only <html> carries the overflow rule, and neither element gets a height. Giving <body>
+   `height:100%` alongside `overflow-x:hidden` makes overflow-y compute to auto, so the
+   body turns into its own scroll container: the page then has two scrollers, and the
+   outer one scrolls over empty space below the viewport-tall body. */
+html { overflow-x: hidden; }
+html, body { margin: 0; padding: 0; }
 
 body {
   background: var(--bg);
@@ -212,6 +217,10 @@ a.pill:active { background: var(--surface-2); }
 .btn--sm { min-height: 38px; font-size: 14px; padding: 0 12px; }
 
 .section {
+  /* Positioned so the .sr-only file inputs inside resolve against the section rather
+     than the page: an absolutely positioned box with no positioned ancestor adds its
+     own offset to the document's scrollable area. */
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -296,7 +305,9 @@ input[type="color"] {
   cursor: pointer;
 }
 .styleopt[aria-pressed="true"] { border-color: var(--accent); color: var(--text); }
-.styleopt canvas, .styleopt svg { display: block; width: 48px; height: 48px; border-radius: 6px; background: #fff; }
+/* No width/height here: renderInto() sets both inline, so the thumbnail size lives with
+   the render call in stylePicker() — it drives the render resolution as well. */
+.styleopt canvas, .styleopt svg { display: block; border-radius: 6px; background: #fff; }
 
 .logo-preview { display: flex; align-items: center; gap: 12px; }
 .logo-preview img {
